@@ -1,0 +1,217 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P00196750_Mohammad_Munem_Sarwar_DDOOCP_Winter
+{
+    public partial class frmReview : Form
+    {
+        SqlConnection cnn = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\BookingDB.mdf;Integrated Security=True");
+        public frmReview()
+        {
+            InitializeComponent();
+        }
+
+        private void frmReview_Load(object sender, EventArgs e)
+        {
+            pnlContent.Visible = false;
+            loadData();
+
+            fillComboBox();
+
+        }
+
+        private void fillComboBox()
+        {
+            SqlCommand cmd = new SqlCommand("Select * from tblUser Where UserName !='Admin'", cnn);
+            //cnn.Open(); // opening sql conection
+            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            adapter.Fill(dt);
+
+            //cboUser.DataSource = dt;
+            //cboUser.DisplayMember = "UserName";
+            //cboUser.ValueMember = "Uid";
+        }
+
+        private void loadData() // viewing data from database
+        {
+            SqlCommand cmd = new SqlCommand("Select * from tblReview", cnn);
+            cnn.Open(); // opening sql conection
+            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            adapter.Fill(dt);
+
+            cnn.Close(); // closing sql connection
+
+            gv.AutoGenerateColumns = false;
+
+            gv.Columns[0].DataPropertyName = "Id";
+            gv.Columns[1].DataPropertyName = "Uid";
+            gv.Columns[2].DataPropertyName = "Remarks";
+            gv.Columns[3].DataPropertyName = "isPublic";
+            gv.Columns[4].DataPropertyName = "reviewDate";
+            gv.DataSource = dt;
+            gv.AllowUserToAddRows = false;
+
+            ////Set Buttons Show/Hide
+            //if (clsUserTools.userType != "Admin")
+            //{
+            //    Edit.Visible = false;
+            //    Delete.Visible = false;
+            //    btnAdd.Visible = false;
+            //}
+            //else
+            //{
+            //    Edit.Visible = true;
+            //    Delete.Visible = true;
+            //    btnAdd.Visible = true;
+            //}
+
+        }
+
+        private void clearFields() // clearing data from data entry panel
+        {
+            txtID.Text = "";
+            
+            txtRemarks.Text = "";
+            checkBox1.Checked = false;
+
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            clearFields();
+            pnlContent.Visible = true;
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            clearFields();
+            pnlContent.Visible = false;
+        }
+        private void btnInsert_Click(object sender, EventArgs e)
+        {
+            if (btnInsert.Text == "Insert")
+            {
+                try
+                {
+                    SqlCommand cmd = new SqlCommand("Insert into tblReview VALUES(@Uid,@Remarks,@isPublic,@reviewDate)", cnn);
+                    cmd.Parameters.AddWithValue("Uid", clsUserTools.Uid);
+                    cmd.Parameters.AddWithValue("Remarks", txtRemarks.Text);
+                    cmd.Parameters.AddWithValue("isPublic", checkBox1.Checked);
+                    cmd.Parameters.AddWithValue("reviewDate", dateTimePicker.Value);
+                    cnn.Open();
+                    cmd.ExecuteNonQuery();
+                    cnn.Close();
+
+                    clearFields();
+
+                    MessageBox.Show("Data Inserted Successfully", "Insert", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    loadData();
+
+                    pnlContent.Visible = false;
+                    clearFields();
+
+                }
+                catch (Exception ex1)
+                {
+                    MessageBox.Show(ex1.Message);
+                    cnn.Close();
+                }
+
+            }
+            else
+            {
+                int idedit = Int32.Parse(txtID.Text);
+
+                SqlCommand cmd = new SqlCommand("Update tblReview SET remarks=@remarks,isPublic=@isPublic,reviewDate=@reviewDate where id=" + idedit, cnn);
+                //cmd.Parameters.AddWithValue("Uid", txtUid.Text);
+                cmd.Parameters.AddWithValue("remarks", txtRemarks.Text);
+                cmd.Parameters.AddWithValue("isPublic", checkBox1.Checked);
+                cmd.Parameters.AddWithValue("reviewDate", dateTimePicker.Value);
+
+                cnn.Open();
+                cmd.ExecuteNonQuery();
+                cnn.Close();
+
+                clearFields();
+
+                MessageBox.Show("Data Updated Successfully", "update", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                loadData();
+
+                pnlContent.Visible = false;
+                clearFields();
+            }
+        }
+
+        private void dataGVreview_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            try // try catch validation for exception handeling
+            {
+                switch (e.ColumnIndex)
+                {
+                    case 5: // for editing data from data grid view
+                        pnlContent.Visible = true;
+                        btnInsert.Text = "Update";
+
+                        txtID.Text = gv.Rows[e.RowIndex].Cells[0].Value.ToString();
+                        int idn = Int32.Parse(txtID.Text);
+
+                        SqlCommand cmd1 = new SqlCommand("Select * from tblReview where id=" + idn, cnn);
+                        cnn.Open();
+                        SqlDataReader rd = cmd1.ExecuteReader();
+                        if (rd.Read())
+                        {
+                            //cboUser.SelectedValue = rd.GetValue(1).ToString();
+                            txtRemarks.Text = rd.GetString(2);
+                            checkBox1.Checked = rd.GetBoolean(3);
+
+                            dateTimePicker.Value = DateTime.Parse(rd.GetValue(4).ToString());
+
+
+                        }
+                        cnn.Close();
+
+
+                        break;
+                    case 6: // for deleting data from data grid view
+                        txtID.Text = gv.Rows[e.RowIndex].Cells[0].Value.ToString();
+                        int iddel = Int32.Parse(txtID.Text);
+                        DialogResult dialog = MessageBox.Show("Are you sure you want to delete this record ?", "Delete Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                        if (dialog == DialogResult.Yes)
+                        {
+                            SqlCommand cmd2 = new SqlCommand("Delete from tblReview where id=" + iddel, cnn);
+                            cnn.Open();
+                            cmd2.ExecuteNonQuery();
+                            cnn.Close();
+
+                            loadData();
+
+                            MessageBox.Show("Data deleted succecfully");
+                        }
+
+
+
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+            catch (Exception ex1)
+            {
+
+                MessageBox.Show("Error" + ex1); // message for error handeling
+                cnn.Close();
+            }
+        }
+    }
+}

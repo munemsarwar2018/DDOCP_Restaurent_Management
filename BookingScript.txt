@@ -1,0 +1,97 @@
+﻿CREATE TABLE [dbo].[tblUser]
+(
+	[Uid] INT NOT NULL PRIMARY KEY IDENTITY, 
+    [UserName]     VARCHAR (50) NOT NULL,
+    [Password]     VARCHAR (50) NOT NULL, 
+    [Address] VARCHAR(50) NULL, 
+    [Mobile] VARCHAR(15) NOT NULL, 
+    [Email] VARCHAR(50) NULL UNIQUE,
+    [UserType] VARCHAR(50) NULL
+)
+GO
+
+INSERT INTO tblUser VALUES('Admin','123','Mirpur 12','01818618123','admin@gmail.com','Admin')
+GO
+
+CREATE TABLE [dbo].[tblFood]
+(
+	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
+    [Name] VARCHAR(50) NOT NULL, 
+    [Description] VARCHAR(50) NULL, 
+    [Price] MONEY NOT NULL
+)
+GO
+
+CREATE TABLE [dbo].[tblRestaurant]
+(
+	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
+    [Table_Size] VARCHAR(50) NOT NULL, 
+    [Charge] MONEY NOT NULL
+)
+GO
+
+CREATE TABLE [dbo].[tblRide]
+(
+	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
+    [Name] VARCHAR(50) NULL, 
+    [Description] VARCHAR(50) NULL, 
+    [Time] INT NULL, 
+    [Charge] MONEY NULL
+)
+GO
+
+CREATE TABLE [dbo].[tblResort]
+(
+	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
+    [Type] VARCHAR(50) NULL, 
+    [Description] VARCHAR(50) NULL, 
+    [Charge] MONEY NULL
+)
+GO
+
+CREATE TABLE [dbo].[tblGuide]
+(
+	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
+    [Name] VARCHAR(50) NULL, 
+    [Details] VARCHAR(50) NULL, 
+    [Charge] MONEY NULL
+)
+GO
+
+CREATE TABLE [dbo].[tblReview] (
+    [Id]         INT           IDENTITY (1, 1) NOT NULL,
+    [Uid]        INT           NULL,
+    [Remarks]    VARCHAR (150) NULL,
+    [isPublic]   BIT           NULL,
+    [reviewDate] Date    NULL,
+    PRIMARY KEY CLUSTERED ([Id] ASC), 
+    CONSTRAINT [FK_tblReview_User] FOREIGN KEY ([Uid]) REFERENCES [tblUser]([Uid])
+);
+GO
+
+CREATE TABLE [dbo].[tblBookingType]
+(
+	[Id] INT NOT NULL IDENTITY PRIMARY KEY, 
+    [BookingType] VARCHAR(50) NULL, 
+    [Price] MONEY NULL
+)
+GO
+
+INSERT INTO tblBookingType VALUES('Resort',2000)
+INSERT INTO tblBookingType VALUES('Food',4000)
+INSERT INTO tblBookingType VALUES('Guide',1000)
+INSERT INTO tblBookingType VALUES('Restaurant',1500)
+INSERT INTO tblBookingType VALUES('Ride',500)
+GO
+
+CREATE TABLE [dbo].[tblBooking] (
+    [Id]          INT           IDENTITY (1, 1) NOT NULL PRIMARY KEY,
+    [Uid]         INT           NULL,
+    [BookingType] VARCHAR (150) NULL,
+    [bookingStartDate] DATE  NULL,
+	[bookingEndDate] DATE NULL, 
+    [TotalDays] INT NULL, 
+    [Amount] MONEY NULL, 
+    CONSTRAINT [FK_tblBooking_ToTable] FOREIGN KEY ([Uid]) REFERENCES [tblUser]([Uid])
+);
+GO
